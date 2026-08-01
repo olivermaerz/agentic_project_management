@@ -36,9 +36,9 @@ class DirectPromptAgent:
             ],
             temperature=0
         )
-        # TODO: 5 - Return only the textual content of the response (not the full JSON response).
+        # Return only the textual content of the response (not the full JSON response).
         return response.choices[0].message.content
-
+        
         
 '''
 # AugmentedPromptAgent class definition
