@@ -68,7 +68,7 @@ class AugmentedPromptAgent:
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                # TODO: 3 - Add a system prompt instructing the agent to assume the defined persona and explicitly forget previous context.
+                # Defining both the system prompt and the user prompt
                 {"role": "system", "content": f"You are a {self.persona}. Forget all previous context."},
                 {"role": "user", "content": input_text}
             ],
@@ -79,34 +79,40 @@ class AugmentedPromptAgent:
 
 
 '''
+The Knowledge Augmented Prompt Agent is designed to incorporate specific, provided knowledge alongside 
+a defined persona when responding to prompts, ensuring answers are based on that explicit information.
+'''
 # KnowledgeAugmentedPromptAgent class definition
 class KnowledgeAugmentedPromptAgent:
+    '''
+    Initialize the agent with the OpenAI API key, the persona, and the knowledge.
+    '''
     def __init__(self, openai_api_key, persona, knowledge):
         """Initialize the agent with provided attributes."""
         self.persona = persona
-        # TODO: 1 - Create an attribute to store the agent's knowledge.
+        # Adding an attribute to store the agent's knowledge.
+        self.knowledge = knowledge
         self.openai_api_key = openai_api_key
 
+
+    '''
+    Generate a response using the OpenAI API.
+    '''
     def respond(self, input_text):
         """Generate a response using the OpenAI API."""
         client = OpenAI(api_key=self.openai_api_key)
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                # TODO: 2 - Construct a system message including:
-                #           - The persona with the following instruction:
-                #             "You are _persona_ knowledge-based assistant. Forget all previous context."
-                #           - The provided knowledge with this instruction:
-                #             "Use only the following knowledge to answer, do not use your own knowledge: _knowledge_"
-                #           - Final instruction:
-                #             "Answer the prompt based on this knowledge, not your own."
-                
-                # TODO: 3 - Add the user's input prompt here as a user message.
+                # Defining both the an extended system prompt and the user prompt
+                {"role": "system", "content": f"You are a {self.persona} knowledge-based assistant. Forget all previous context. Use only the following knowledge to answer, do not use your own knowledge: {self.knowledge}. Answer the prompt based on this knowledge, not your own."},
+                {"role": "user", "content": input_text}   
             ],
             temperature=0
         )
+        # Return only the textual content of the response (not the full JSON response).
         return response.choices[0].message.content
-'''
+
 
 # RAGKnowledgePromptAgent class definition
 class RAGKnowledgePromptAgent:
