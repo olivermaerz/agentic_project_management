@@ -1,0 +1,15 @@
+# Python stuff
+venv/
+__pycache__/
+
+# Mac stuff
+.DS_Store
+
+# Project specific stuff
+rubric.md
+project_overview.md
+phase_1/README.md
+phase_2/README.md
+
+# Environments
+.env
