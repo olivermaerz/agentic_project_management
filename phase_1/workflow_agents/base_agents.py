@@ -22,6 +22,7 @@ class DirectPromptAgent:
         # Initialize the agent with the OpenAI API key.
         self.openai_api_key = openai_api_key
 
+
     '''
     Generate a response using the OpenAI API.
     '''
@@ -38,32 +39,44 @@ class DirectPromptAgent:
         )
         # Return only the textual content of the response (not the full JSON response).
         return response.choices[0].message.content
-        
-        
+
+
+'''     
+The Augmented Prompt Agent is a specialized agent designed to respond according to a predefined 
+persona. Unlike basic prompt-response interactions, this agent explicitly adopts a persona, 
+leading to more targeted and contextually relevant outputs.
 '''
 # AugmentedPromptAgent class definition
 class AugmentedPromptAgent:
+    '''
+    Initialize the agent with the OpenAI API key and the persona.
+    '''
     def __init__(self, openai_api_key, persona):
         """Initialize the agent with given attributes."""
-        # TODO: 1 - Create an attribute for the agent's persona
+        # An attribute for the agent's persona
+        self.persona = persona
+        # Initialize the agent with the OpenAI API key.
         self.openai_api_key = openai_api_key
 
+
+    '''
+    Generate a response using the OpenAI API.
+    '''
     def respond(self, input_text):
         """Generate a response using OpenAI API."""
         client = OpenAI(api_key=self.openai_api_key)
-
-        # TODO: 2 - Declare a variable 'response' that calls OpenAI's API for a chat completion.
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 # TODO: 3 - Add a system prompt instructing the agent to assume the defined persona and explicitly forget previous context.
+                {"role": "system", "content": f"You are a {self.persona}. Forget all previous context."},
                 {"role": "user", "content": input_text}
             ],
             temperature=0
         )
+        # Return only the textual content of the response (not the full JSON response).
+        return response.choices[0].message.content
 
-        return  # TODO: 4 - Return only the textual content of the response, not the full JSON payload.
-'''
 
 '''
 # KnowledgeAugmentedPromptAgent class definition

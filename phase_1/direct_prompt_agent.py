@@ -19,10 +19,10 @@ direct_agent = DirectPromptAgent(openai_api_key)
 direct_agent_response = direct_agent.respond(prompt)
 
 # Print the response from the agent
-print("\nResponse from the agent:")
-print("-"*100)
+print(f"\nResponse from the agent (to the prompt: {prompt}):")
+print("-"*100 + "\n")
 print(direct_agent_response)
-print("-"*100)
+print("\n" + "-"*100)
 
 # Explanatory message describing the knowledge source used by the agent to generate the response
 print(f"The agent used the following knowledge source LLM model gpt-3.5-turbo from OpenAI to generate the response.\n")
