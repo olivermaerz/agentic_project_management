@@ -13,3 +13,7 @@ phase_2/README.md
 
 # Environments
 .env
+
+# Output files
+chunks-*.csv
+embeddings-*.csv
