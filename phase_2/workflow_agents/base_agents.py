@@ -274,13 +274,15 @@ class EvaluationAgent:
         for i in range(self.max_interactions):
             print(f"\n--- Interaction {i+1} ---")
 
-            print(" Step 1: Worker agent generates a response to the prompt")
+            print("\n*** Step 1: Worker agent generates a response to the prompt")
+            print("-" * 100 + "\n")
             print(f"Prompt:\n{prompt_to_evaluate}")
             # Getting the response from the worker agent
             response_from_worker = self.worker_agent.respond(prompt_to_evaluate)
-            print(f"Worker Agent Response:\n{response_from_worker}")
+            print(f"\nWorker Agent Response:\n{response_from_worker}")
 
-            print(" Step 2: Evaluator agent judges the response")
+            print("\n*** Step 2: Evaluator agent judges the response")
+            print("-" * 100 + "\n")
             eval_prompt = (
                 f"Does the following answer: {response_from_worker}\n"
                 f"Meet this criteria: {self.evaluation_criteria}"
@@ -298,12 +300,15 @@ class EvaluationAgent:
             evaluation = response.choices[0].message.content.strip()
             print(f"Evaluator Agent Evaluation:\n{evaluation}")
 
-            print(" Step 3: Check if evaluation is positive")
+            print("\n*** Step 3: Check if evaluation is positive")
+            print("-" * 100 + "\n")
             if evaluation.lower().startswith("yes"):
                 print("✅ Final solution accepted.")
                 break
             else:
-                print(" Step 4: Generate instructions to correct the response")
+                print("❌ This solution was rejected.")
+                print("\n*** Step 4: Generate instructions to correct the response")
+                print("-" * 100 + "\n")
                 instruction_prompt = (
                     f"Provide instructions to fix an answer based on these reasons why it is incorrect: {evaluation}"
                 )
@@ -318,7 +323,8 @@ class EvaluationAgent:
                 instructions = response.choices[0].message.content.strip()
                 print(f"Instructions to fix:\n{instructions}")
 
-                print(" Step 5: Send feedback to worker agent for refinement")
+                print("\n*** Step 5: Send feedback to worker agent for refinement")
+                print("-" * 100 + "\n")
                 prompt_to_evaluate = (
                     f"The original prompt was: {initial_prompt}\n"
                     f"The response to that prompt was: {response_from_worker}\n"
