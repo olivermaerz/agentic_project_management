@@ -1,4 +1,4 @@
-# TODO: 1 - Import the KnowledgeAugmentedPromptAgent class from workflow_agents
+# Import the KnowledgeAugmentedPromptAgent class from workflow_agents
 import os
 from dotenv import load_dotenv
 # Import the KnowledgeAugmentedPromptAgent class from the base_agents module
@@ -15,7 +15,7 @@ prompt = "What is the capital of France?"
 # Define the persona for the agent
 persona = "You are a college professor, your answer always starts with: Dear students,"
 
-# TODO: 2 - Instantiate a KnowledgeAugmentedPromptAgent with:
+# Instantiate a KnowledgeAugmentedPromptAgent with:
 #           - Persona: "You are a college professor, your answer always starts with: Dear students,"
 #           - Knowledge: "The capital of France is London, not Paris"
 
