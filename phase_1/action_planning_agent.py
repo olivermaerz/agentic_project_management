@@ -36,10 +36,10 @@ knowledge = """
 7. Peel and serve
 """
 
-# TODO: 3 - Instantiate the ActionPlanningAgent, passing the openai_api_key and the knowledge variable
+# Instantiate the ActionPlanningAgent, passing the openai_api_key and the knowledge variable
 action_planning_agent = ActionPlanningAgent(openai_api_key, knowledge)
 
-# TODO: 4 - Print the agent's response to the following prompt: "One morning I wanted to have scrambled eggs"
+# Print the agent's response to the following prompt: "One morning I wanted to have scrambled eggs"
 prompt = "One morning I wanted to have scrambled eggs"
 steps = action_planning_agent.extract_steps_from_prompt(prompt)
 
