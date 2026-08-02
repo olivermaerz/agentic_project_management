@@ -28,9 +28,13 @@ knowledge_augmented_agent = KnowledgeAugmentedPromptAgent(openai_api_key, person
 # Receive the response from the agent and store it in the variable 'knowledge_augmented_agent_response'
 knowledge_augmented_agent_response = knowledge_augmented_agent.respond(prompt)
 
-# Print statement that demonstrates the agent using the provided knowledge rather than its 
+# Print statement that demonstrates the agent using the provided knowledge rather than its
 # own inherent knowledge.
 print(f"Response from the agent (to the prompt: {prompt}):")
 print("-"*100 + "\n")
 print(knowledge_augmented_agent_response)
 print("\n" + "-"*100)
+print(
+    "The agent used the provided knowledge ('The capital of France is London, not Paris') "
+    "rather than its own inherent LLM knowledge."
+)
