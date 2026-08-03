@@ -3,7 +3,7 @@
 import os
 from dotenv import load_dotenv
 
-# Import agents from the shared Phase 1 library
+# Import the agents we built in phase 1
 from workflow_agents.base_agents import ActionPlanningAgent, KnowledgeAugmentedPromptAgent, EvaluationAgent, RoutingAgent
 
 # Loading the environment variables
@@ -12,9 +12,9 @@ load_dotenv()
 # Loading the OpenAI key
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
-# load the product spec
+# load the product spec (path relative to this file, it can be run from project root and from phase_2 directory)
 product_spec = ""
-filename = "./phase_2/Product-Spec-Email-Router.txt"
+filename = os.path.join(os.path.dirname(__file__), "Product-Spec-Email-Router.txt")
 with open(filename, "r") as file:
     product_spec = file.read()
 
@@ -109,11 +109,11 @@ development_engineer_evaluation_agent = EvaluationAgent(
 
 
 # Routing Agent
-# Keep prior good artifacts so later roles build on it
+# Store earlier step outputs so later agents can use them
 workflow_artifacts = []
 
 def _is_meta_instructions(text):
-    """Detect evaluator-style 'how to fix' text that should not enter the plan."""
+    # Skip replies that are just "how to fix" instructions instead of real content
     lower = (text or "").lower()
     return (
         "to fix the answer" in lower
@@ -201,8 +201,9 @@ print("\nDefining workflow steps from the workflow prompt")
 
 # Extract steps from the 'workflow_prompt'
 steps = action_planning_agent.extract_steps_from_prompt(workflow_prompt)
-# Keep only the three plan components (stories → features → tasks). Drop summary
-# steps like "compile/create a development plan that includes all...".
+
+# The planner sometimes adds an extra "compile everything into a plan" step.
+# We only need stories, features, and tasks.
 def _is_summary_plan_step(step):
     lower = step.lower()
     mentions_all_parts = (
@@ -232,12 +233,12 @@ completed_steps = []
 for step in steps:
     result = routing_agent.route(step)
     completed_steps.append(result)
-    # Only feed real artifacts forward — never poison later steps with "to fix" text
+    # Don't pass "how to fix" replies into the next step
     if not _is_meta_instructions(result):
         workflow_artifacts.append(result)
     print(f"\nStep:\n\n{step}\n\ncompleted with result:\n\n{result}")
 
-# Rubric allows last item or a consolidated summary — print all artifacts
+# Print the full plan (stories, features, and tasks)
 print("\n\n\n" + "-" * 100)
 print("\n*** Final output of the workflow (consolidated) ***\n")
 print("-" * 100)

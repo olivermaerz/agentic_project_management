@@ -25,5 +25,10 @@ print(augmented_agent_response)
 print("\n" + "-"*100)
 
 # The agent used the knowledge of OpenAI's LLM model gpt-3.5-turbo to answer the prompt.
-# The system prompt specifying the persona affected the agent's response tone and style (e.g. 
-# by adding the "Dear students," prefix as the college professor persona).
+# The system prompt specifying the persona affected the agent's response tone and style 
+# (e.g. by adding the "Dear students," prefix as the college professor persona).
+print(
+    "The agent used the knowledge of OpenAI's LLM model gpt-3.5-turbo to answer the prompt. \
+    The system prompt specifying the persona affected the agent's response tone and style \
+    (e.g. by adding the 'Dear students,' prefix as the college professor persona)."
+    )

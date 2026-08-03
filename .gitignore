@@ -11,6 +11,7 @@ project_overview.md
 phase_1/README.md
 phase_2/README.md
 phase_2/original_agentic_workflow.py
+instructions*.html
 
 # Environments
 .env

@@ -27,7 +27,7 @@ class DirectPromptAgent:
         '''
         client = OpenAI(base_url="https://openai.vocareum.com/v1", api_key=self.openai_api_key)
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo", # rubric requires gpt-3.5-turbo except for the routing agent
+            model="gpt-3.5-turbo", # use gpt-3.5-turbo for this agent
             # messages: The user's prompt. It does not include a system prompt.
             messages=[
                 {"role": "user", "content": prompt}
@@ -278,7 +278,7 @@ class EvaluationAgent:
             print("-" * 100 + "\n")
             print(f"Prompt:\n{prompt_to_evaluate}")
 
-            # Avoid the double call to the worker agent if the initial response is provided in the first iteration
+            # Reuse the first worker response if it was already generated
             if i == 0 and initial_response is not None:
                 response_from_worker = initial_response
             else:
@@ -310,7 +310,7 @@ class EvaluationAgent:
 
             print("\n*** Step 3: Check if evaluation is positive")
             print("-" * 100 + "\n")
-            # Guard against false Yes on meta "how to fix" responses
+            # Sometimes the worker answers with "how to fix this" text; treat that as a fail
             lower_response = response_from_worker.lower()
             is_meta_response = (
                 "to fix the answer" in lower_response
@@ -326,7 +326,7 @@ class EvaluationAgent:
                 break
             else:
                 if evaluation.lower().startswith("yes") and is_meta_response:
-                    print("❌ Rejected: response looks like formatting instructions, not real content.")
+                    print("❌ Rejected: got formatting instructions instead of real content.")
                     evaluation = (
                         "No, the answer only provides instructions about how to format or fix "
                         "the response instead of the actual required content."
@@ -336,9 +336,7 @@ class EvaluationAgent:
                 print("\n*** Step 4: Generate instructions to correct the response")
                 print("-" * 100 + "\n")
                 instruction_prompt = (
-                    f"Provide instructions to fix an answer based on these reasons why it is incorrect: {evaluation}. "
-                    f"The corrected answer must contain the actual content in the required structure, "
-                    f"not more instructions about how to format it."
+                    f"Provide instructions to fix an answer based on these reasons why it is incorrect: {evaluation}"
                 )
                 response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
@@ -357,9 +355,7 @@ class EvaluationAgent:
                     f"The original prompt was: {initial_prompt}\n"
                     f"The response to that prompt was: {response_from_worker}\n"
                     f"It has been evaluated as incorrect.\n"
-                    f"Rewrite the full answer correctly now. Output the actual content in the "
-                    f"required structure. Do not output instructions for someone else to follow. "
-                    f"Corrections to apply: {instructions}"
+                    f"Make only these corrections, do not alter content validity: {instructions}"
                 )
         return {
             # Dictionary containing the final response, evaluation, and number of iterations
@@ -466,16 +462,16 @@ class ActionPlanningAgent:
             step = line.strip()
             if not step:
                 continue
-            # Skip markdown headers / section titles that are not actionable steps
+            # Skip markdown headers
             if step.startswith("#"):
                 continue
-            # Skip introductory prose that is not a concrete step
+            # Skip intro lines that aren't real steps
             lower = step.lower()
             if lower.startswith("here are") or lower.startswith("the following"):
                 continue
             if "typically involve" in lower or "contains all these" in lower:
                 continue
-            # Strip leading list markers like "1." or "- "
+            # Remove leading "1." / "-" style markers
             step = re.sub(r"^[\-\*\d]+[\.\)]\s*", "", step).strip()
             if step:
                 steps.append(step)
