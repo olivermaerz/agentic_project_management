@@ -264,7 +264,7 @@ class EvaluationAgent:
         self.worker_agent = worker_agent
         self.max_interactions = max_interactions
 
-    def evaluate(self, initial_prompt):
+    def evaluate(self, initial_prompt, initial_response=None):
         """
         This method manages interactions between agents to achieve a solution.
         """
@@ -274,17 +274,27 @@ class EvaluationAgent:
         for i in range(self.max_interactions):
             print(f"\n--- Interaction {i+1} ---")
 
-            print(" Step 1: Worker agent generates a response to the prompt")
+            print("\n*** Step 1: Worker agent generates a response to the prompt")
+            print("-" * 100 + "\n")
             print(f"Prompt:\n{prompt_to_evaluate}")
-            # Getting the response from the worker agent
-            response_from_worker = self.worker_agent.respond(prompt_to_evaluate)
-            print(f"Worker Agent Response:\n{response_from_worker}")
 
-            print(" Step 2: Evaluator agent judges the response")
+            # Avoid the double call to the worker agent if the initial response is provided in the first iteration
+            if i == 0 and initial_response is not None:
+                response_from_worker = initial_response
+            else:
+                response_from_worker = self.worker_agent.respond(prompt_to_evaluate)
+ 
+            print(f"\nWorker Agent Response:\n{response_from_worker}")
+
+            print("\n*** Step 2: Evaluator agent judges the response")
+            print("-" * 100 + "\n")
+
             eval_prompt = (
                 f"Does the following answer: {response_from_worker}\n"
-                f"Meet this criteria: {self.evaluation_criteria}"
-                f"Respond Yes or No, and the reason why it does or doesn't meet the criteria."
+                f"Meet this criteria: {self.evaluation_criteria}\n"
+                f"Respond Yes or No, and the reason why it does or doesn't meet the criteria. "
+                f"Answer No if the response is instructions, advice, or guidance about how to "
+                f"format or fix an answer, instead of the actual required content."
             )
             # Getting the response from the evaluation agent
             response = client.chat.completions.create(
@@ -298,14 +308,37 @@ class EvaluationAgent:
             evaluation = response.choices[0].message.content.strip()
             print(f"Evaluator Agent Evaluation:\n{evaluation}")
 
-            print(" Step 3: Check if evaluation is positive")
-            if evaluation.lower().startswith("yes"):
+            print("\n*** Step 3: Check if evaluation is positive")
+            print("-" * 100 + "\n")
+            # Guard against false Yes on meta "how to fix" responses
+            lower_response = response_from_worker.lower()
+            is_meta_response = (
+                "to fix the answer" in lower_response
+                or "worker agent should" in lower_response
+                or (
+                    "follow these steps" in lower_response
+                    and "task id" in lower_response
+                    and "task title" not in lower_response.split("follow these steps")[0][-200:]
+                )
+            )
+            if evaluation.lower().startswith("yes") and not is_meta_response:
                 print("✅ Final solution accepted.")
                 break
             else:
-                print(" Step 4: Generate instructions to correct the response")
+                if evaluation.lower().startswith("yes") and is_meta_response:
+                    print("❌ Rejected: response looks like formatting instructions, not real content.")
+                    evaluation = (
+                        "No, the answer only provides instructions about how to format or fix "
+                        "the response instead of the actual required content."
+                    )
+                else:
+                    print("❌ This solution was rejected.")
+                print("\n*** Step 4: Generate instructions to correct the response")
+                print("-" * 100 + "\n")
                 instruction_prompt = (
-                    f"Provide instructions to fix an answer based on these reasons why it is incorrect: {evaluation}"
+                    f"Provide instructions to fix an answer based on these reasons why it is incorrect: {evaluation}. "
+                    f"The corrected answer must contain the actual content in the required structure, "
+                    f"not more instructions about how to format it."
                 )
                 response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
@@ -318,12 +351,15 @@ class EvaluationAgent:
                 instructions = response.choices[0].message.content.strip()
                 print(f"Instructions to fix:\n{instructions}")
 
-                print(" Step 5: Send feedback to worker agent for refinement")
+                print("\n*** Step 5: Send feedback to worker agent for refinement")
+                print("-" * 100 + "\n")
                 prompt_to_evaluate = (
                     f"The original prompt was: {initial_prompt}\n"
                     f"The response to that prompt was: {response_from_worker}\n"
                     f"It has been evaluated as incorrect.\n"
-                    f"Make only these corrections, do not alter content validity: {instructions}"
+                    f"Rewrite the full answer correctly now. Output the actual content in the "
+                    f"required structure. Do not output instructions for someone else to follow. "
+                    f"Corrections to apply: {instructions}"
                 )
         return {
             # Dictionary containing the final response, evaluation, and number of iterations
@@ -433,6 +469,15 @@ class ActionPlanningAgent:
             # Skip markdown headers / section titles that are not actionable steps
             if step.startswith("#"):
                 continue
-            steps.append(step)
+            # Skip introductory prose that is not a concrete step
+            lower = step.lower()
+            if lower.startswith("here are") or lower.startswith("the following"):
+                continue
+            if "typically involve" in lower or "contains all these" in lower:
+                continue
+            # Strip leading list markers like "1." or "- "
+            step = re.sub(r"^[\-\*\d]+[\.\)]\s*", "", step).strip()
+            if step:
+                steps.append(step)
 
         return steps
